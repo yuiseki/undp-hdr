@@ -1,0 +1,54 @@
+Creative Commons Attribution 3.0 IGO (CC BY 3.0 IGO)
+https://creativecommons.org/licenses/by/3.0/igo/legalcode
+
+Everything under this directory comes from the Human Development Report
+statistics of the United Nations Development Programme (UNDP), published by
+its Human Development Report Office (HDRO) at
+https://hdr.undp.org/data-center/documentation-and-downloads. The global
+Multidimensional Poverty Index tables are produced jointly by HDRO and the
+Oxford Poverty and Human Development Initiative (OPHI), University of
+Oxford.
+
+The Terms of use of hdr.undp.org (https://hdr.undp.org/terms-use, read on
+2026-10-04) say: "All materials provided on this website are copyrighted
+under the Creative Commons Attribution 3.0 IGO license." They require
+appropriate credit, a link to the licence, an indication of where changes
+were made, and no suggestion that the licensor endorses the user or the
+use. The data files carry no licence text of their own.
+
+Recommended citation (metadata workbook, sheet recommended_citation):
+Source: UNDP (United Nations Development Programme). 2025. Human Development
+Report 2025 - A matter of choice: People and possibilities in the age of AI.
+New York.
+
+HDRO recalculates the entire series of HDI values and ranks every year with
+the most recent revised data, so values and ranks from different reports
+cannot be compared directly.
+
+This dataset is not made or endorsed by UNDP or HDRO.
+
+The files under raw/<release>/ are HDRO's own, byte for byte; each
+release's MANIFEST.json records their URLs, sizes, sha256 and
+Last-Modified.
+
+The Parquet under parquet/<release>/ was made from the composite indices
+time series CSV:
+
+  - the CSV was decoded from Windows-1252 and its text written as UTF-8
+  - columns were typed by name: iso3, country, hdicode and region as text;
+    hdi_rank, gii_rank, gdi_group and rankdiff_hdi_phdi as integers; the
+    other indicators of the codebook as floating-point numbers; an empty
+    cell as NULL
+  - composite_indices.parquet keeps the CSV's 206 rows and 1,112 columns in
+    their order
+  - composite_indices_long.parquet holds the same values one per row
+    (iso3, country, region, indicator, year, value), indicator and year
+    taken from the column name <indicator>_<year>; empty cells are left
+    out, and rows are sorted by indicator, iso3 and year
+  - no value was changed
+
+The statistical annex workbooks and the metadata workbook are not
+converted.
+
+The code that fetches, checks and converts is in the repository this
+dataset was built from and does not apply here.

@@ -52,22 +52,49 @@ series.
 ## How to run
 
 ```sh
-uv run python scripts/01_download.py   # fetch into data/raw/<release>/
-uv run python scripts/02_verify.py     # re-hash, test xlsx/zip, count CSV rows
-uv run python -m pytest                # unit tests for the page parsing
+uv run python scripts/01_download.py         # fetch into data/raw/<release>/
+uv run python scripts/03_export_parquet.py   # time series CSV -> data/parquet/<release>/
+uv run python scripts/02_verify.py           # raw files against MANIFEST.json, Parquet against the CSV
+uv run python -m pytest                      # unit tests
+uv run python src/publish.py                 # dry run: the files that would go to the Hub
+uv run python src/publish.py --push          # upload to huggingface.co/datasets/yuiseki/undp-hdr
 ```
 
 `01_download.py` uses the Python standard library only, waits at least one
 second between requests, and skips files whose manifest entry still matches
 their sha256.
 
+`03_export_parquet.py` writes two Parquet files per release from the
+composite indices time series CSV: `composite_indices.parquet`, the CSV as
+it is (206 rows, 1,112 columns), and `composite_indices_long.parquet`, one
+row per filled cell as (iso3, country, region, indicator, year, value), with
+indicator and year taken from column names like `hdi_1990`. Column types
+come from the names (see the script's docstring); a value that does not fit
+its type stops the run. The xlsx files are report-style tables and are
+published as they are, not converted.
+
+`02_verify.py` re-hashes every raw file, and compares every cell of both
+Parquet files with the CSV read by the csv module.
+
+`publish.py` refuses to run if the dataset card `data/README.md` does not
+declare every Parquet file as a subset, or a raw file's sha256 differs from
+its manifest. It uploads `data/README.md`, `data/LICENSE`,
+`data/provenance.yaml`, `data/parquet/**` and the raw files unchanged.
+
 ## Layout
 
 ```
-scripts/01_download.py   read the source page, fetch the data files, write MANIFEST.json
-scripts/02_verify.py     check files against MANIFEST.json
-tests/                   unit tests; tests/fixtures/ holds a trimmed copy of the source page
-data/raw/<release>/      files as served, plus MANIFEST.json (not in git)
+scripts/01_download.py         read the source page, fetch the data files, write MANIFEST.json
+scripts/03_export_parquet.py   time series CSV -> wide and long Parquet
+scripts/02_verify.py           check raw files against MANIFEST.json and Parquet against the CSV
+src/publish.py                 upload to the Hugging Face Hub (dry run by default)
+tests/                         unit tests; tests/fixtures/ holds a trimmed copy of the source page
+data/README.md                 the dataset card (tracked)
+data/LICENSE                   licence and what the Parquet changes (tracked)
+data/provenance.yaml           source, files, counts, checks, modifications (tracked)
+data/raw/<release>/            files as served, plus MANIFEST.json (not in git)
+data/parquet/<release>/        the Parquet (not in git)
+data/work/                     the CSV transcoded to UTF-8 while exporting (not in git)
 ```
 
 `MANIFEST.json` records, for each file, its URL, label on the page, bytes,

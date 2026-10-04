@@ -1,0 +1,108 @@
+# Where this data comes from and what was done to it.
+
+source:
+  name: Human Development Report statistics (HDI and the composite indices)
+  publisher: Human Development Report Office (HDRO), United Nations Development Programme (UNDP)
+  mpi_coproducer: Oxford Poverty and Human Development Initiative (OPHI), University of Oxford
+  downloads: https://hdr.undp.org/data-center/documentation-and-downloads
+  licence:
+    applied: CC BY 3.0 IGO (https://hdr.undp.org/terms-use, read 2026-10-04)
+    legal_code: https://creativecommons.org/licenses/by/3.0/igo/legalcode
+    card: "license: other, license_name: cc-by-3.0-igo"
+    attribution_required: true
+    indicate_changes: true
+    no_endorsement: true
+    share_alike: false
+    note: |
+      The report PDF says "All rights reserved" and is not included. The data
+      files carry no licence text; the site's terms apply.
+  comparability: |
+    HDRO recalculates the entire series of HDI values and ranks every year,
+    so values and ranks from different reports cannot be compared directly.
+  citation: >-
+    Source: UNDP (United Nations Development Programme). 2025. Human
+    Development Report 2025 - A matter of choice: People and possibilities in
+    the age of AI. New York.
+
+releases:
+  hdr2025:
+    page_updates:
+      - 06 May 2025, HDR 2025 data update
+      - 17 October 2025, MPI 2025 data update
+    fetched: 2026-10-04
+    files:
+      HDR25_Composite_indices_complete_time_series.csv:
+        bytes: 2001263
+        sha256: 61ed82e5b66c88dfca8ff9fac775c63981ecab6a254862af97acacc41c143117
+        last_modified: "Mon, 05 May 2025 22:39:12 GMT"
+        encoding: windows-1252
+        rows: 206
+        columns: 1112
+        value_cells: 228248
+        empty_value_cells: 28244
+      HDR25_Composite_indices_metadata.xlsx:
+        bytes: 13731
+        sha256: b4128881e81d208aa75920114e1189ca01dcea41c7d8e977732e9342f6de0a8d
+        last_modified: "Mon, 05 May 2025 22:39:13 GMT"
+      HDR25_Statistical_Annex_HDI_Table.xlsx:
+        bytes: 44086
+        sha256: 0927ec85756fe5059484b72e22d1b2af2706060d962394a18a22eca19e79ba7f
+        last_modified: "Tue, 06 May 2025 12:55:01 GMT"
+      HDR25_Statistical_Annex_HDI_Trends_Table.xlsx:
+        bytes: 49378
+        sha256: 4a84631bbf380422ee63e6ecca83296ec946ce1f7cf877301b35cd4b966d6c1f
+        last_modified: "Tue, 06 May 2025 12:55:01 GMT"
+      HDR25_Statistical_Annex_IHDI_Table.xlsx:
+        bytes: 59710
+        sha256: 79a8f1525958862a1df7093cc06d4738ae0565c247c9f7700000497cfd455fd9
+        last_modified: "Tue, 06 May 2025 12:55:01 GMT"
+      HDR25_Statistical_Annex_GDI_Table.xlsx:
+        bytes: 61878
+        sha256: 6bb2e3ec867a4b28782109fa6f1c3af31fde0e7c2cf7413031b2076edc076a0b
+        last_modified: "Tue, 06 May 2025 12:55:01 GMT"
+      HDR25_Statistical_Annex_GII_Table.xlsx:
+        bytes: 46364
+        sha256: bbfa34c53f52ba0e85c8d9a4fbdafff43ca3634cbb23556caaa12b3fd8df4b1b
+        last_modified: "Tue, 06 May 2025 12:55:01 GMT"
+      HDR25_Statistical_Annex_PHDI_Table.xlsx:
+        bytes: 47439
+        sha256: 8bd236102c4de2a785dc39e539eaf757e95cae0db5fba9b689ea651439ee8e80
+        last_modified: "Tue, 06 May 2025 12:55:02 GMT"
+      HDR25_Statistical_Annex_Tables_1-7.xlsx:
+        bytes: 217358
+        sha256: 02c7875ec8761b11b61bb0534942e5db2a837195699c08da49467fb1ae3e9e56
+        last_modified: "Tue, 06 May 2025 12:57:27 GMT"
+      2025_gMPI_Table1and2.xlsx:
+        bytes: 139761
+        sha256: 0f8080a749ce23f991c5185466fbf0428d452c7673ee0e46a86ebbc93e5a4653
+        last_modified: "Thu, 16 Oct 2025 15:26:32 GMT"
+    subsets:
+      hdr2025.composite_indices: {file: parquet/hdr2025/composite_indices.parquet, rows: 206, columns: 1112}
+      hdr2025.composite_indices_long: {file: parquet/hdr2025/composite_indices_long.parquet, rows: 200004, columns: 6}
+    counts:
+      countries: 195
+      aggregates: 11
+      indicators: 40
+      years: 1990-2023
+      hdi_2023_countries: 193
+
+checked:
+  note: scripts/02_verify.py, with Python's csv module and DuckDB, before upload
+  items:
+    - every raw file against MANIFEST.json (size and sha256); every xlsx a sound zip
+    - CSV rows counted with the csv module in Windows-1252 (206)
+    - wide Parquet has the CSV's rows and its 1,112 column names in order
+    - every column of the type its name gives
+    - all 229,072 cells of the wide Parquet equal the CSV's, one by one
+    - long Parquet has one row per filled value cell (200,004) with the same (iso3, indicator, year) to value mapping, country and region
+    - a DuckDB without extension autoloading opens both files
+    - no bloom filters
+
+modifications:
+  raw: none. HDRO's files, byte for byte.
+  parquet:
+    - the CSV decoded from Windows-1252, text written as UTF-8
+    - columns typed by name; a value that does not fit stops the build; empty cells NULL
+    - long table derived from column names <indicator>_<year>, empty cells left out, sorted by indicator, iso3, year
+    - written with zstd, without bloom filters
+  not_converted: the metadata workbook, the statistical annex workbooks and the MPI workbook (report-style layouts)
